@@ -39,8 +39,20 @@ class MainActivity : ComponentActivity() {
             val painter = painterResource(id = R.drawable.wallpaper)
             val description = "It is a Wallpaper Image."
             val title = "Nice looking Wallpaper"
-            Box(modifier = Modifier.fillMaxWidth(0.5f)) {
-                ImageCard(painter = painter, contentDescription = description, title = title)
+            Column(
+                modifier = Modifier
+                    .background(Color.Transparent)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.SpaceAround
+            ) {
+                Box(modifier = Modifier.fillMaxWidth(0.5f)) {
+                    ImageCard(painter = painter, contentDescription = description, title = title)
+                }
+                //Spacer(modifier = Modifier.height(20.dp))
+                Box(modifier = Modifier.fillMaxWidth(0.5f)) {
+                    ImageCard(painter = painter, contentDescription = description, title = title)
+                }
             }
         }
     }

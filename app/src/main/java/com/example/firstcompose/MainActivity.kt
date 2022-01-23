@@ -1,76 +1,62 @@
 package com.example.firstcompose
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.*
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.sp
-import kotlin.random.Random
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Column(Modifier.fillMaxSize()) {
+            val scaffoldState = rememberScaffoldState()
 
-                val color = remember{
-                    mutableStateOf(Color(0xffB4F8C8))
-                }
+            var textFieldState by remember{
+                mutableStateOf("")
+            }
 
-                ColorBox(
-                    Modifier
-                        .weight(1f)
+            val scope = rememberCoroutineScope()
+
+            Scaffold(modifier = Modifier
+                .fillMaxSize(),
+                scaffoldState = scaffoldState
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
                         .fillMaxSize()
-                ){
-                    color.value = it
+                        .padding(horizontal = 30.dp)
+                    ) {
+                        TextField(value = textFieldState,
+                        label = {
+                            Text("Enter your Name")
+                        },
+                            onValueChange = {
+                                textFieldState = it
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                            )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = {
+                        scope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar("Hey $textFieldState!")
+                            Toast.makeText(this@MainActivity, "Hey $textFieldState!", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Text("Press to Greet")
+                    }
                 }
-                Box(modifier = Modifier
-                    .background(color.value)
-                    .weight(1f)
-                    .fillMaxSize()
-                )
             }
         }
     }
-}
-
-@Composable
-fun ColorBox(modifier: Modifier = Modifier,updateColor: (Color)->Unit){
-
-    Box(modifier = modifier
-        .background(Color.Blue)
-        .clickable {
-            updateColor(
-                Color(
-                    Random.nextFloat(),
-                    Random.nextFloat(),
-                    Random.nextFloat(),
-                    1f
-                )
-            )
-        }
-    )
 }

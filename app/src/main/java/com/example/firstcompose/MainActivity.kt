@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,31 +35,52 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val scaffoldState = rememberScaffoldState()
-            val scope = rememberCoroutineScope()
-            
-            Scaffold(scaffoldState = scaffoldState) {
-                var counter = produceState(initialValue = 0){
-                    delay(3000L)
-                    value = 6
-                    delay(3000L)
-                    value = 10
-                    delay(3000L)
-                    value = 12
-                    delay(3000L)
-                    value = 20
-                }
 
-                if(counter.value%5 == 0 && counter.value > 0)
-                {
-                    LaunchedEffect(key1 = scaffoldState){
-                        scaffoldState.snackbarHostState.showSnackbar("Hi there, ${counter.value}")
-                    }
-                }
+            var sizeState by remember{ mutableStateOf(200.dp)}
 
-                Button(onClick = {  })
-                {
-                    Text(text = "Click Here : ${counter.value}")
+            val size by animateDpAsState(
+                targetValue = sizeState,
+
+                tween(1000)
+
+//                tween(
+//                    500,
+//                    250,
+//                    easing = LinearOutSlowInEasing
+//                )
+
+//            spring(
+//                Spring.DampingRatioHighBouncy
+//            )
+
+//                keyframes {
+//                    durationMillis = 5000
+//
+//                    sizeState at 0 with LinearEasing
+//                    sizeState * 1.5f at 1000 with FastOutLinearInEasing
+//                    sizeState * 2f at 5000
+//                }
+            )
+
+            val infiniteTransition = rememberInfiniteTransition()
+
+            val color by infiniteTransition.animateColor(
+                initialValue = Color.Cyan,
+                targetValue = Color.Red,
+                animationSpec = infiniteRepeatable(
+                    tween(2000),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+
+            Box(modifier = Modifier
+                .size(size)
+                .background(color),
+            contentAlignment = Alignment.Center){
+                Button( onClick = {
+                    sizeState += 30.dp
+                }) {
+                    Text(text = "Zoom it!")
                 }
             }
         }

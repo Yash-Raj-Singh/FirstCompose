@@ -25,6 +25,7 @@ import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -32,36 +33,32 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val constraints = ConstraintSet {
-                val greenBox = createRefFor("green")
-                val redBox = createRefFor("red")
-
-                val guideline = createGuidelineFromTop(0.5f)
-
-                constrain(greenBox){
-                    top.linkTo(guideline)
-                    start.linkTo(parent.start)
-                    width = Dimension.value(100.dp)
-                    height = Dimension.value(100.dp)
-                }
-                constrain(redBox){
-                    top.linkTo(parent.top)
-                    start.linkTo(greenBox.end)
-                    width = Dimension.value(100.dp)
-                    height = Dimension.value(100.dp)
+            val scaffoldState = rememberScaffoldState()
+            val scope = rememberCoroutineScope()
+            
+            Scaffold(scaffoldState = scaffoldState) {
+                var counter = produceState(initialValue = 0){
+                    delay(3000L)
+                    value = 6
+                    delay(3000L)
+                    value = 10
+                    delay(3000L)
+                    value = 12
+                    delay(3000L)
+                    value = 20
                 }
 
-                createHorizontalChain(greenBox, redBox, chainStyle = ChainStyle.Packed)
-            }
-            ConstraintLayout(constraints, modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier
-                    .background(Color(0xfffca311))
-                    .layoutId("green")
-                )
-                Box(modifier = Modifier
-                    .background(Color(0xffe5e5e5))
-                    .layoutId("red")
-                )
+                if(counter.value%5 == 0 && counter.value > 0)
+                {
+                    LaunchedEffect(key1 = scaffoldState){
+                        scaffoldState.snackbarHostState.showSnackbar("Hi there, ${counter.value}")
+                    }
+                }
+
+                Button(onClick = {  })
+                {
+                    Text(text = "Click Here : ${counter.value}")
+                }
             }
         }
     }

@@ -1,158 +1,170 @@
 package com.example.firstcompose
 
 import android.os.Bundle
-import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlin.math.PI
-import kotlin.math.atan2
-import kotlin.math.roundToInt
+import kotlin.math.cos
+import kotlin.math.sin
 
-
-@ExperimentalComposeUiApi
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            Surface(
+                color = Color(0xff2b2d42),
+                modifier = Modifier.fillMaxSize()
+            ) {
                 Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .border(1.dp, Color.Green, RoundedCornerShape(10.dp))
-                            .padding(30.dp)
-                    ) {
-                        var volume by remember {
-                            mutableStateOf(0f)
-                        }
-
-                        val barCount = 20
-                        VolumeKnob(
-                            modifier = Modifier.size(100.dp)
-                        ){
-                            volume = it
-                        }
-                        Spacer(modifier = Modifier.width(20.dp))
-                        VolumeBar(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(30.dp),
-                            activeBars = (volume * barCount).roundToInt(),
-                            barCount = barCount
-                        )
-                    }
+                    Timer(
+                        totalTime = 100L * 1000L,
+                        handleColor = Color(0xffef233c),
+                        inactiveBarColor = Color.DarkGray,
+                        activeBarColor = Color(0xff4361ee),
+                        modifier = Modifier.size(200.dp)
+                    )
                 }
+            }
         }
     }
 }
 
 @Composable
-fun VolumeBar(
+fun Timer(
+    totalTime : Long,
+    handleColor : Color,
+    inactiveBarColor : Color,
+    activeBarColor : Color,
     modifier: Modifier = Modifier,
-    activeBars : Int = 0,
-    barCount:Int = 10
+    initialValue : Float = 1f,
+    strokeWidth : Dp = 5.dp
 ) {
-    BoxWithConstraints(
+    var size by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+
+    var value by remember {
+        mutableStateOf(initialValue)
+    }
+
+    var currentTime by remember {
+        mutableStateOf(totalTime)
+    }
+
+    var isTimerRunning by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(key1 = currentTime, key2 = isTimerRunning)
+    {
+        if(currentTime > 0 && isTimerRunning)
+        {
+            delay(100L)
+            currentTime -= 100L
+            value = currentTime / totalTime.toFloat()
+        }
+    }
+    
+    Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
+            .onSizeChanged {
+                size = it
+            }
     ) {
-        val barWidth = remember {
-            constraints.maxWidth / (2f * barCount)
+        Canvas(modifier = modifier ){
+            drawArc(
+                color = inactiveBarColor,
+                startAngle = -215f,
+                sweepAngle = 250f,
+                useCenter = false,
+                size = Size(size.width.toFloat(), size.height.toFloat()),
+                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
+            )
+            drawArc(
+                color = activeBarColor,
+                startAngle = -215f,
+                sweepAngle = 250f * value,
+                useCenter = false,
+                size = Size(size.width.toFloat(), size.height.toFloat()),
+                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
+            )
+
+            val center = Offset(size.width/2f, size.height/2f)
+
+            val beta = (250f * value + 145f) * (PI/180f).toFloat()
+
+            val radius = size.width/2f
+
+            val a = cos(beta) * radius
+
+            val b = sin(beta) * radius
+
+            drawPoints(
+                listOf(Offset(center.x + a, center.y + b)),
+                pointMode = PointMode.Points,
+                color = handleColor,
+                strokeWidth = (strokeWidth * 3f).toPx(),
+                cap = StrokeCap.Round
+            )
         }
-        Canvas(modifier = modifier){
-            for (i in 0 until barCount)
-            {
-                drawRoundRect(
-                    color = if(i in 0..activeBars) Color.Green else Color.DarkGray,
-                    topLeft = Offset(i * barWidth * 2f + barWidth / 2f, 0f),
-                    size = Size(barWidth, constraints.maxHeight.toFloat()),
-                    cornerRadius = CornerRadius(2f)
-                )
-            }
-        }
-    }
-}
 
-@ExperimentalComposeUiApi
-@Composable
-fun VolumeKnob(
-    modifier: Modifier = Modifier,
-    limitingAngle: Float = 25f,
-    onValueChange : (Float) -> Unit
-){
-    var rotation by remember{
-        mutableStateOf(limitingAngle)
-    }
-
-    var touchX by remember {
-        mutableStateOf(0f)
-    }
-    var touchY by remember {
-        mutableStateOf(0f)
-    }
-    var centerX by remember {
-        mutableStateOf(0f)
-    }
-    var centerY by remember {
-        mutableStateOf(0f)
-    }
-
-    Image(
-        painter = painterResource(id = R.drawable.volume_knob),
-        contentDescription = "Music knob",
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned {
-                val windowBounds = it.boundsInWindow()
-                centerX = windowBounds.size.width / 2f
-                centerY = windowBounds.size.height / 2f
-            }
-            .pointerInteropFilter { event ->
-                touchX = event.x
-                touchY = event.y
-                val angle = -atan2(centerX - touchX, centerY - touchY) * (180f / PI).toFloat()
-
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN,
-                    MotionEvent.ACTION_MOVE -> {
-                        if (angle !in -limitingAngle..limitingAngle) {
-                            val fixedAngle = if (angle in -180f..-limitingAngle) {
-                                360f + angle
-                            } else {
-                                angle
-                            }
-                            rotation = fixedAngle
-
-                            val percent = (fixedAngle - limitingAngle) / (360f - 2 * limitingAngle)
-                            onValueChange(percent)
-                            true
-                        } else false
-                    }
-                    else -> false
+        Text(
+            text = (currentTime/1000L).toString(),
+            fontSize = 45.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFEDF2F4)
+        )
+        
+        Button(onClick = {
+                         if (currentTime <= 0L)
+                         {
+                             currentTime = totalTime
+                             isTimerRunning = true
+                         }else{
+                             isTimerRunning = !isTimerRunning
+                         }
+        },
+            modifier = Modifier
+                .align(Alignment.BottomCenter),
+            colors =  ButtonDefaults.buttonColors(
+                backgroundColor = if (!isTimerRunning || currentTime <= 0L){
+                    Color(0xff4361ee)
+                }else{
+                    Color(0xffef233c)
                 }
-            }
-            .rotate(rotation)
-    )
+            )
+        ) {
+            Text(text = if (isTimerRunning && currentTime > 0L) "Pause"
+                else if (isTimerRunning && currentTime == 0L) "Restart"
+                else if(!isTimerRunning && currentTime == totalTime) "Start"
+                else "Resume"
+            )
+        }
+    }
 }

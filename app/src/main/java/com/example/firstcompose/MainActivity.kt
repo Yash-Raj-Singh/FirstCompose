@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     contentAlignment = Alignment.Center
                 ) {
                     Timer(
-                        totalTime = 100L * 1000L,
+                        totalTime = 10L * 1000L,
                         handleColor = Color(0xffef233c),
                         inactiveBarColor = Color.DarkGray,
                         activeBarColor = Color(0xff4361ee),
@@ -85,7 +85,9 @@ fun Timer(
         if(currentTime > 0 && isTimerRunning)
         {
             delay(100L)
+
             currentTime -= 100L
+
             value = currentTime / totalTime.toFloat()
         }
     }
